@@ -1,9 +1,11 @@
+package TaskThread;
+
+import TaskThread.TaskThread;
+
 import java.util.Collection;
 import java.util.HashMap;
 
-/**
- * Created by eugene on 12/18/14.
- */
+
 public class Mapper {
     private volatile static HashMap<Long, TaskThread> tasks;
 

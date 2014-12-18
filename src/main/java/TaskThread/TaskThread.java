@@ -1,3 +1,7 @@
+package TaskThread;
+
+import Task.Task;
+
 import java.util.ArrayList;
 
 import static java.lang.Thread.sleep;
@@ -16,10 +20,6 @@ abstract public class TaskThread implements Runnable {
 
     public long getId () {
         return id;
-    }
-
-    public TaskThread() {
-        this.id = -1;
     }
 
     public TaskThread(boolean isMaster, long id) {
@@ -58,6 +58,9 @@ abstract public class TaskThread implements Runnable {
 
     private ArrayList<Task> toDoList;
 
+
+    protected Task currentTask = null;
+    protected int tasksDone = 0;
     public boolean giveTask (TaskThread taskThread) {
         if (!isMaster) {
             System.out.print("Achtung! Not a master inside giveTask");
@@ -65,7 +68,12 @@ abstract public class TaskThread implements Runnable {
         }
         for(Task task: toDoList) {
             if(task.getType().equals(taskThread.getType())) {
-                taskThread.setTask(task);
+                try {
+                    taskThread.setTask(task);
+                }
+                catch (IllegalAccessException exc) {
+                    exc.printStackTrace();
+                }
                 return true;
             }
         }
@@ -74,10 +82,12 @@ abstract public class TaskThread implements Runnable {
 
 
     protected abstract void runConcreteTask();
-    protected abstract void setTask(Task task);
-    private String type;
-    protected abstract String getType();
-    protected abstract void setType(String type);
+    protected abstract void setTask(Task task) throws IllegalAccessException;
+    protected String type;
+    protected String getType() {
+        return this.type;
+    }
+
 
     protected TaskThread findMaster() {
         if(this.isMaster) {
