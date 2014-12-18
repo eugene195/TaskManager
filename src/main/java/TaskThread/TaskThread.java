@@ -37,7 +37,7 @@ abstract public class TaskThread implements Runnable {
     public void run() {
         if (isMaster) {
 
-        } else {
+        } else {пол
             try {
                 while (true) {
                     if (hasTask) {
@@ -82,6 +82,7 @@ abstract public class TaskThread implements Runnable {
 
 
     protected abstract void runConcreteTask();
+
     protected void setTask(Task task) throws IllegalAccessException {
         if(!task.getType().equals(this.getType())) {
             throw new IllegalAccessException("TaskThread." + this.type + " got wrong type of task!");
