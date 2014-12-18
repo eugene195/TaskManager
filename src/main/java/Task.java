@@ -4,6 +4,7 @@
 public abstract class Task {
     private String type;
 
+    public void execute() {}
     public String getType() {
         return type;
     }

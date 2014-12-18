@@ -1,11 +1,12 @@
 import java.util.ArrayList;
+import java.util.Queue;
 
 import static java.lang.Thread.sleep;
 
 /**
  * Created by eugene on 12/18/14.
  */
-abstract public class TaskThread implements Runnable {
+abstract class TaskThread implements Runnable {
     boolean isMaster = false;
 
     public boolean isMaster() {
@@ -35,20 +36,21 @@ abstract public class TaskThread implements Runnable {
     private boolean hasTask = false;
     @Override
     public void run() {
-        if (isMaster) {
+        while (true) {
+            toDoList = Mapper.getTasks(id);
 
-        } else {
-            try {
-                while (true) {
-                    if (hasTask) {
-                        runConcreteTask();
-                    } else {
-                        hasTask = findMaster().giveTask(this);
-                        if (!hasTask) {
-                            sleep(5000);
-                        }
-                    }
+            if (toDoList.isEmpty()) {
+                
+            }
+            else {
+                for (Task task : toDoList) {
+                    task.execute();
+
                 }
+            }
+
+            try {
+                sleep(500);
             }
             catch (InterruptedException exc) {
                 exc.printStackTrace();
@@ -56,7 +58,7 @@ abstract public class TaskThread implements Runnable {
         }
     }
 
-    private ArrayList<Task> toDoList;
+    private Queue<Task> toDoList;
 
     public boolean giveTask (TaskThread taskThread) {
         if (!isMaster) {
@@ -83,7 +85,7 @@ abstract public class TaskThread implements Runnable {
         if(this.isMaster) {
             return this;
         } else {
-            for(TaskThread taskThread : Mapper.getTasks()) {
+            for(TaskThread taskThread : Mapper.getTaskThreads()) {
                 if (taskThread.isMaster())
                     return taskThread;
             }
