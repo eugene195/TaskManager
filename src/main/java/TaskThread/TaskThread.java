@@ -41,12 +41,14 @@ public abstract class TaskThread implements Runnable {
     public void run() {
         while (true) {
             toDoList = Mapper.getTasks(id);
-
             if (toDoList.isEmpty()) {
+                // Если у мастера нет задач - он стоит. Иначе создается таск для мастера с названием "Дай мне задачу"
+                // Тут же будет анализ, делался такой таск уже или нет
                 if (!isMaster)
                     Mapper.sendTask(new TaskRequest(), getMasterId());
             }
             else {
+                // Задачи есть, Ваш КО
                 if (isMaster) {
                     runMasterTasks();
                 }
@@ -63,6 +65,7 @@ public abstract class TaskThread implements Runnable {
             }
         }
     }
+
 
 
     protected Task currentTask = null;
@@ -87,8 +90,10 @@ public abstract class TaskThread implements Runnable {
     }
 
     protected void runMasterTasks() {
+        // "реальные задачи" - сортировки, умножения и т.п., а не служебные
         ArrayList<Task> performanceTasks = new ArrayList<>();
 
+        // Взяли все такие реальные задачи
         for (Task task : toDoList) {
             if (task.getType().equals("performance")) {
                 performanceTasks.add(task);
@@ -99,15 +104,19 @@ public abstract class TaskThread implements Runnable {
         int threadsCount = threads.size() - 1;
         ArrayList<Long> threadIDs = new ArrayList<>();
 
+        // Взяли все потоки, которым эти задачи можно дать
         for (TaskThread thread : threads) {
             if (this.id != thread.getId())
                 threadIDs.add(thread.getId());
         }
         int tasksCount = performanceTasks.size();
 
+        // Дополнили реальные задачи пустыми до целого деления на кол-во потоков
         for (int i = 0; i < (tasksCount % threadsCount); i++)
             performanceTasks.add(new TaskEmpty());
 
+        // Пошли распределять реальные задачи на все потоки, каждому потоку по tasksPerThread
+        // После этого потоки проснутся, а у них задач куча...
         int tasksPerThread = (performanceTasks.size() / threadsCount);
         for (int i = 0; i < threadsCount; i++) {
             for (int j = 0; j < tasksPerThread; j++) {
@@ -117,11 +126,18 @@ public abstract class TaskThread implements Runnable {
     }
 
     protected void runSlaveTasks () {
-
+        for (Task task : toDoList) {
+            if (task.getType().equals(getType())) {
+                runConcreteTask(task);
+            }
+            else {
+                System.out.print("TaskThread." + this.id + " got wrong type of task!" + task.getType());
+            }
+        }
     }
 
 
-    protected abstract void runConcreteTask();
+    protected abstract void runConcreteTask(Task task);
     protected void setTask(Task task) throws IllegalAccessException {
         if(!task.getType().equals(this.getType())) {
             throw new IllegalAccessException("TaskThread." + this.type + " got wrong type of task!");
