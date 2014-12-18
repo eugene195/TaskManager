@@ -13,7 +13,7 @@ public class Sorter extends TaskThread {
 
     @Override
     protected void runConcreteTask() {
-        if(this.currentTask != null) {
+        if(this.currentTask != null && !this.currentTask.isDone()) {
             TaskSort task = (TaskSort) this.currentTask;
             Collections.sort(task.getArray());
             task.setDone(true);
@@ -22,11 +22,4 @@ public class Sorter extends TaskThread {
         }
     }
 
-    @Override
-    protected void setTask(Task task) throws IllegalAccessException{
-        if(!task.getType().equals("SRT")) {
-            throw new IllegalAccessException("TaskThread.Sorter got wrong type of task!");
-        }
-        this.currentTask = task;
-    }
 }

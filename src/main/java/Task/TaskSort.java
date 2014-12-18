@@ -8,6 +8,10 @@ import java.util.ArrayList;
 public class TaskSort extends Task {
     private ArrayList<Integer> array;
 
+    public TaskSort(ArrayList<Integer> array) {
+        this.array = array;
+        this.type = "SRT";
+    }
 
     public ArrayList<Integer> getArray() {
         return array;

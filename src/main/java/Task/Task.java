@@ -10,6 +10,10 @@ public abstract class Task {
     public void setDone(boolean isDone) {
         this.done = isDone;
     }
+    public boolean isDone() {
+        return this.done;
+    }
+
     public String getType() {
         return type;
     }

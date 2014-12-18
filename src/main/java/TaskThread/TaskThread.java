@@ -82,7 +82,12 @@ abstract public class TaskThread implements Runnable {
 
 
     protected abstract void runConcreteTask();
-    protected abstract void setTask(Task task) throws IllegalAccessException;
+    protected void setTask(Task task) throws IllegalAccessException {
+        if(!task.getType().equals(this.getType())) {
+            throw new IllegalAccessException("TaskThread." + this.type + " got wrong type of task!");
+        }
+        this.currentTask = task;
+    }
     protected String type;
     protected String getType() {
         return this.type;

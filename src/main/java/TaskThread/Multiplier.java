@@ -1,7 +1,9 @@
 package TaskThread;
 
-import Task.Task;
+import Task.*;
 import TaskThread.TaskThread;
+
+import java.util.ArrayList;
 
 /**
  * Created by Nikita on 18.12.2014.
@@ -14,17 +16,23 @@ public class Multiplier extends TaskThread {
 
     @Override
     protected void runConcreteTask() {
-
-    }
-
-    @Override
-    protected void setTask(Task task) {
-
+        if(this.currentTask != null && !this.currentTask.isDone()) {
+            TaskMultiply task = (TaskMultiply) this.currentTask;
+            ArrayList<Double> array = task.getArray();
+            Double result = 1.;
+            for(Double n : array) {
+                result *= n;
+            }
+            task.setResult(result);
+            task.setDone(true);
+            this.currentTask = null;
+            ++this.tasksDone;
+        }
     }
 
     @Override
     protected String getType() {
-        return null;
+        return this.type;
     }
 
 }
