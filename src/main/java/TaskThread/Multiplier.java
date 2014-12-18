@@ -1,6 +1,6 @@
 package TaskThread;
 
-import Task.TaskMultiply;
+import Task.Client.TaskMultiply;
 
 import java.util.ArrayList;
 

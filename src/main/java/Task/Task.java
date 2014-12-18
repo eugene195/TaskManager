@@ -7,10 +7,6 @@ public abstract class Task {
     protected String type;
     private boolean done = false;
 
-    public void execute() {
-
-    }
-
     public void setDone(boolean isDone) {
         this.done = isDone;
     }

@@ -1,7 +1,9 @@
-package Task;
+package Task.Client;
+
+import Task.TaskClient;
 
 import java.util.ArrayList;
-public class TaskMultiply extends Task{
+public class TaskMultiply extends TaskClient{
     ArrayList<Double> array;
     private Double result;
     public TaskMultiply(ArrayList<Double> array) {

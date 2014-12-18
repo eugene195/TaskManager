@@ -1,6 +1,6 @@
 package TaskThread;
 
-import Task.TaskSort;
+import Task.Client.TaskSort;
 
 import java.util.Collections;
 
