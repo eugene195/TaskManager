@@ -1,5 +1,6 @@
 package TaskThread;
 
+import Task.Task;
 import Task.Client.TaskMultiply;
 
 import java.util.ArrayList;
@@ -14,8 +15,8 @@ public class Multiplier extends TaskThread {
     }
 
     @Override
-    protected void runConcreteTask() {
-        if(this.currentTask != null && !this.currentTask.isDone()) {
+    protected void runConcreteTask(Task inTask) {
+        if(inTask != null && !inTask.isDone()) {
             TaskMultiply task = (TaskMultiply) this.currentTask;
             ArrayList<Double> array = task.getArray();
             Double result = 1.;

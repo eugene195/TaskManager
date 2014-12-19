@@ -1,13 +1,11 @@
 package TaskThread;
 
 import Task.Task;
-import Task.TaskService;
 import Task.Service.TaskEmpty;
-import Task.Service.TaskRequest;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import static java.lang.Thread.sleep;
 
@@ -17,19 +15,34 @@ import static java.lang.Thread.sleep;
 public abstract class TaskThread implements Runnable {
     boolean isMaster = false;
     protected long id;
-    private Queue<Task> toDoList;
+    protected boolean isAlive = true;
+    protected ConcurrentSkipListSet<Task> toDoList;
+    protected Task currentTask;
+    protected long upgradeTime = 0;
 
     private boolean taskRequested = false;
     protected int tasksDone = 0;
 
     protected String type;
+    public long getUpgadeTime() {
+        return upgradeTime;
+    }
 
     public boolean isMaster() {
         return isMaster;
     }
-    public void promote() {
+
+    public void upgrade() {
         this.isMaster = true;
     }
+    public void downgrade() {
+        this.isMaster = true;
+    }
+
+    public void resolve() {
+        // Resolve logics
+    }
+
     public long getId () {
         return id;
     }
@@ -62,29 +75,7 @@ public abstract class TaskThread implements Runnable {
     @Override
     public void run() {
         while (true) {
-            toDoList = Mapper.getTasks(id);
-            if (toDoList.isEmpty()) {
-                // Если у мастера нет задач - он стоит. Иначе создается таск для мастера с названием "Дай мне задачу"
-                // Тут же будет анализ, делался такой таск уже или нет
-                if (taskRequested) {
-
-                }
-                if (!isMaster) {
-                    Mapper.sendTask(new TaskRequest(), getMasterId());
-                    taskRequested = true;
-                }
-            }
-            else {
-                taskRequested = false;
-                // Задачи есть, Ваш КО
-                if (isMaster) {
-                    runMasterTasks();
-                }
-                else {
-                    runSlaveTasks();
-                }
-            }
-
+            fetchTasks();
             try {
                 sleep(500);
             }
@@ -93,50 +84,68 @@ public abstract class TaskThread implements Runnable {
             }
         }
     }
+//
+//    protected ConcurrentLinkedQueue<Task> fetchFromMaster() {
+//        ConcurrentLinkedQueue<Task> returnedQueue = new ConcurrentLinkedQueue<>();
+//        if (isAlive && isMaster) {
+//            if (toDoList.isEmpty()) {
+//                Task empty = new TaskEmpty();
+//                returnedQueue.add(empty);
+//            } else {
+//                returnedQueue.add(toDoList.poll());
+//            }
+//        }
+//        return returnedQueue;
+//    }
 
-    protected void runMasterTasks() {
-        // "реальные задачи" - сортировки, умножения и т.п., а не служебные
-        ArrayList<Task> serviceTasks = new ArrayList<>();
-
-        // Взяли все такие реальные задачи
-        for (Task task : toDoList) {
-            if (task instanceof TaskService) {
-                serviceTasks.add(task);
+    public boolean giveTask (TaskThread taskThread) {
+        if (!isMaster) {
+            System.out.print("Achtung! Not a master inside giveTask");
+            return false;
+        }
+        for(Task task: toDoList) {
+            if(task.getType().equals(taskThread.getType())) {
+                try {
+                    taskThread.setTask(task);
+                }
+                catch (IllegalAccessException exc) {
+                    exc.printStackTrace();
+                }
+                return true;
             }
         }
-
-        Collection<TaskThread> threads = Mapper.getTaskThreads();
-        int threadsCount = threads.size() - 1;
-        ArrayList<Long> threadIDs = new ArrayList<>();
-
-        // Взяли все потоки, которым эти задачи можно дать
-        for (TaskThread thread : threads) {
-            if (this.id != thread.getId())
-                threadIDs.add(thread.getId());
-        }
-        int tasksCount = serviceTasks.size();
-
-        // Дополнили реальные задачи пустыми до целого деления на кол-во потоков
-        for (int i = 0; i < (tasksCount % threadsCount); i++)
-            serviceTasks.add(new TaskEmpty());
-
-        // Пошли распределять реальные задачи на все потоки, каждому потоку по tasksPerThread
-        // После этого потоки проснутся, а у них задач куча...
-        int tasksPerThread = (serviceTasks.size() / threadsCount);
-        for (int i = 0; i < threadsCount; i++) {
-            for (int j = 0; j < tasksPerThread; j++) {
-                Mapper.sendTask(serviceTasks.get(i+j), threadIDs.get(i));
-            }
-        }
+        return false;
     }
 
-    protected void runSlaveTasks () {
-        for (Task task : toDoList) {
-            if (task.getType().equals(getType())) {
-                runConcreteTask(task);
+    protected void setTask(Task task) throws IllegalAccessException {
+        if(!task.getType().equals(this.getType())) {
+            throw new IllegalAccessException("TaskThread." + this.type + " got wrong type of task!");
+        }
+        this.currentTask = task;
+    }
+
+    protected void fetchTasks() {
+        if (this.isMaster) {
+            this.toDoList.addAll(Mapper.getTasks());
+        }
+        else {
+            TaskThread master = findMaster();
+            master.giveTask(this);
+            if (this.currentTask == null) {
+                this.upgradeTime = System.currentTimeMillis();
+                upgrade();
+                Mapper.deleteTaskThread(master.getId());
+                Collection<TaskThread> siblings = Mapper.getTaskThreads();
+                for (TaskThread sibling : siblings) {
+                    if (sibling.isMaster() && this.isMaster) {
+                        if (this.upgradeTime < sibling.getUpgadeTime()) {
+                            this.downgrade();
+                        }
+                    }
+                }
             }
             else {
-                System.out.print("TaskThread." + this.id + " got wrong type of task!" + task.getType());
+                this.toDoList.forEach(this::runConcreteTask);
             }
         }
     }

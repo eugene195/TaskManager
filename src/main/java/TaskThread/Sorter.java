@@ -1,5 +1,6 @@
 package TaskThread;
 
+import Task.Task;
 import Task.Client.TaskSort;
 
 import java.util.Collections;
@@ -13,8 +14,8 @@ public class Sorter extends TaskThread {
     }
 
     @Override
-    protected void runConcreteTask() {
-        if(this.currentTask != null && !this.currentTask.isDone()) {
+    protected void runConcreteTask(Task inTask) {
+        if(inTask != null && !inTask.isDone()) {
             TaskSort task = (TaskSort) this.currentTask;
             Collections.sort(task.getArray());
             task.setDone(true);
